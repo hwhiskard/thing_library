@@ -20,7 +20,7 @@ bootstrap = Bootstrap(app)
 oauth = OAuth(app)
 manager = Manager(app)
 
-app.config['SECRET_KEY'] = os.environ('SECRET_KEY')
+app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 
 def make_shell_context():
     return dict (app=app)
