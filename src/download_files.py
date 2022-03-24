@@ -1,16 +1,27 @@
 import requests as r
 import os
 
-from dotenv import load_dotenv, find_dotenv
-
-load_dotenv(find_dotenv())
 
 api_base = "https://api.thingiverse.com/"
 
-def get_api_path(base, access_token):
+def get_api_path(base, access_token, search_term = None, *args):
 
-    full_api_path = base + '?access_token=' + access_token
-    return full_api_path
+    if search_term:
+        api_query = base + search_term
+    else:
+        api_query = base
+
+    api_query += '?'
+
+    if args:
+        for arg in args:
+            api_query += arg + '&'
+    else:
+        api_query += '&'
+
+    api_query += 'access_token=' + access_token
+
+    return api_query
 
 class ThingDownloader:
 
@@ -20,17 +31,17 @@ class ThingDownloader:
 
     def get_user_details(self):
 
-        api_path = api_base + 'users/me'
-        full_url = get_api_path(api_path, self.access_token)
+        full_url = get_api_path(api_base, self.access_token, 'users/me')
         self.user_details = r.get(full_url).json()
 
         return self.user_details
 
-    def search_for_thing(self,search_term):
+    def search_for_thing(self,search_term,per_page):
 
-        api_path = api_base + f'search/{search_term}/'
-
-        full_url = get_api_path(api_path, self.access_token)
+        search_path = f'search/{search_term}'
+        num_results_path = f'per_page={per_page}'
+        full_url = get_api_path(api_base, self.access_token, search_path, num_results_path)
+        print(full_url)
         self.search_results = r.get(full_url).json()
 
         return self.search_results
@@ -38,9 +49,8 @@ class ThingDownloader:
 
     def get_thing_by_id(self, api_base, thing_id):
 
-        api_path = api_base + f'things/{thing_id}'
-
-        full_url = get_api_path(api_path, self.access_token)
+        search_term = f'things/{thing_id}'
+        full_url = get_api_path(api_base, self.access_token, search_term)
 
         self.thing_json = r.get(full_url).json()
         
@@ -67,8 +77,6 @@ if __name__ == '__main__':
 
     terrier = ThingDownloader()
 
-    print(terrier.access_token)
-
     terrier.get_thing_by_id(api_base,2334419)
     
     thing_files = terrier.get_files()
@@ -77,4 +85,5 @@ if __name__ == '__main__':
 
     search = ThingDownloader()
 
-    searchres = search.search_for_thing('dog')
+    searchres = search.search_for_thing('dog',per_page=100)
+    hits = searchres['hits']
