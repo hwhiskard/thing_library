@@ -66,6 +66,22 @@ class ThingDownloader:
                         print('Enter Y or N')
             thing['is_correct'] = get_input()
 
+    def download_verified(self, download_location):
+
+        for thing in self.search_results['hits']:
+            if thing['is_correct'] == True:
+                    file_path = get_api_path(thing['url'] + '/files', self.access_token)
+                    file_dict = r.get(file_path).json()
+                    
+                    for files in file_dict: 
+                        print(files)
+                        file_url = get_api_path(files['download_url'], self.access_token)
+                        file = r.get(file_url)
+                        file_name = os.path.join(download_location, thing['name'])
+                        with open(file_name, 'wb') as f:
+                            f.write(file.content)
+        print('files downloaded')
+
     def get_thing_by_id(self, api_base, thing_id):
 
         search_term = f'things/{thing_id}'
@@ -103,7 +119,7 @@ if __name__ == '__main__':
     # file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
     dogs = ThingDownloader()
-    dogs.search_for_thing('dog',per_page=1, sort = 'popular')
+    dogs.search_for_thing('dog',per_page=3, sort = 'popular')
     dogs.verify_from_image()
+    dogs.download_verified(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
-    print(dogs.search_results)
