@@ -1,6 +1,7 @@
 import requests as r
 import os
-
+from PIL import Image
+import matplotlib.pyplot as plt
 
 api_base = "https://api.thingiverse.com/"
 
@@ -36,16 +37,34 @@ class ThingDownloader:
 
         return self.user_details
 
-    def search_for_thing(self,search_term,per_page):
+    def search_for_thing(self,search_term,per_page, sort):
 
         search_path = f'search/{search_term}'
         num_results_path = f'per_page={per_page}'
-        full_url = get_api_path(api_base, self.access_token, search_path, num_results_path)
-        print(full_url)
+        sort_path = f'sort={sort}'
+        full_url = get_api_path(api_base, self.access_token, search_path, num_results_path, sort_path)
         self.search_results = r.get(full_url).json()
 
         return self.search_results
 
+    def verify_from_image(self):
+
+        for thing in self.search_results['hits']:
+            print(thing["name"])
+            print(thing["preview_image"])
+            response = r.get(thing["preview_image"], stream=True)
+            img = Image.open(response.raw)
+            plt.imshow(img)
+            plt.show()
+            def get_input():
+                while True:
+                    correct_map = {'Y':True, 'N': False}
+                    is_correct = input('Is object suitable (Y or N)?')
+                    try:
+                        return correct_map[is_correct]
+                    except:
+                        print('Enter Y or N')
+            thing['is_correct'] = get_input()
 
     def get_thing_by_id(self, api_base, thing_id):
 
@@ -75,15 +94,16 @@ class ThingDownloader:
 
 if __name__ == '__main__':
 
-    terrier = ThingDownloader()
+    # terrier = ThingDownloader()
 
-    terrier.get_thing_by_id(api_base,2334419)
+    # terrier.get_thing_by_id(api_base,2334419)
     
-    thing_files = terrier.get_files()
+    # thing_files = terrier.get_files()
 
-    file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
+    # file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
-    search = ThingDownloader()
+    dogs = ThingDownloader()
+    dogs.search_for_thing('dog',per_page=1, sort = 'popular')
+    dogs.verify_from_image()
 
-    searchres = search.search_for_thing('dog',per_page=100)
-    hits = searchres['hits']
+    print(dogs.search_results)
