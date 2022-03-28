@@ -3,6 +3,10 @@ import os
 from PIL import Image
 import matplotlib.pyplot as plt
 
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
+
 api_base = "https://api.thingiverse.com/"
 
 def get_api_path(base, access_token, search_term = None, *args):
