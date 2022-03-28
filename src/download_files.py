@@ -24,8 +24,61 @@ def get_api_path(base, access_token, search_term = None, *args):
 
     return api_query
 
-class ThingDownloader:
+def cleanse_path(path_string):
+    cleansed_name = ""
+    
+    for char in path_string:
+        if (char.isalnum()):
+            cleansed_name += char
 
+    return cleansed_name
+
+class ThingDownloaderSingle:
+    """
+    Download things for a single thing by ID
+    """
+    def __init__(self):
+
+        self.access_token = os.environ['ACCESS_TOKEN']
+
+    def get_thing_by_id(self, api_base, thing_id):
+
+        search_term = f'things/{thing_id}'
+        full_url = get_api_path(api_base, self.access_token, search_term)
+
+        self.thing_json = r.get(full_url).json()
+        
+
+    def get_files(self):
+        
+        file_path = get_api_path(self.thing_json['files_url'], self.access_token)
+        self.files = r.get(file_path).json()
+        return self.files
+
+    def download_files(self, download_location, limit = None):
+
+        if limit is None:
+            for file in self.files:
+                file_path = get_api_path(file['download_url'], self.access_token)
+                file_dl = r.get(file_path)
+                
+                folder_name = cleanse_path(self.thing_json['name'])
+                folder_path = os.path.join(download_location, folder_name)
+                
+                if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
+
+                file_name = os.path.join(folder_path, file['name'])
+                with open(file_name, 'wb') as f:
+                     f.write(file_dl.content)
+                
+            print('Files downloaded')
+
+
+class ThingDownloaderMulti:
+    """
+    Download files for multiple things at once 
+    """
     def __init__(self):
 
         self.access_token = os.environ['ACCESS_TOKEN']
@@ -70,56 +123,39 @@ class ThingDownloader:
 
         for thing in self.search_results['hits']:
             if thing['is_correct'] == True:
+
+                    folder_name = cleanse_path(thing['name'])
+                    folder_path = os.path.join(download_location, folder_name)
+
+                    if not os.path.exists(folder_path):
+                        os.makedirs(folder_path)
+
                     file_path = get_api_path(thing['url'] + '/files', self.access_token)
                     file_dict = r.get(file_path).json()
-                    
-                    for files in file_dict: 
-                        print(files)
-                        file_url = get_api_path(files['download_url'], self.access_token)
-                        file = r.get(file_url)
-                        file_name = os.path.join(download_location, thing['name'])
+
+                    for file in file_dict: 
+                        #print(file)
+                        file_url = get_api_path(file['download_url'], self.access_token)
+                        file_dl = r.get(file_url)
+                        file_name = os.path.join(folder_path, file['name'])
                         with open(file_name, 'wb') as f:
-                            f.write(file.content)
+                            f.write(file_dl.content)
+
         print('files downloaded')
 
-    def get_thing_by_id(self, api_base, thing_id):
-
-        search_term = f'things/{thing_id}'
-        full_url = get_api_path(api_base, self.access_token, search_term)
-
-        self.thing_json = r.get(full_url).json()
-        
-
-    def get_files(self):
-        
-        file_path = get_api_path(self.thing_json['files_url'], self.access_token)
-        self.files = r.get(file_path).json()
-        return self.files
-
-    def download_files(self, download_location, limit = None):
-
-        if limit is None:
-            for thing in self.files:
-                file_path = get_api_path(thing['download_url'], self.access_token)
-                file = r.get(file_path)
-                file_name = os.path.join(download_location, thing['name'])
-                with open(file_name, 'wb') as f:
-                     f.write(file.content)
-                
-            print('Files downloaded')
 
 if __name__ == '__main__':
 
-    # terrier = ThingDownloader()
+    terrier = ThingDownloaderSingle()
 
-    # terrier.get_thing_by_id(api_base,2334419)
+    terrier.get_thing_by_id(api_base,2334419)
     
-    # thing_files = terrier.get_files()
+    thing_files = terrier.get_files()
 
-    # file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
+    file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
-    dogs = ThingDownloader()
-    dogs.search_for_thing('dog',per_page=3, sort = 'popular')
+    dogs = ThingDownloaderMulti()
+    dogs.search_for_thing('dog',per_page=10, sort = 'popular')
     dogs.verify_from_image()
     dogs.download_verified(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
