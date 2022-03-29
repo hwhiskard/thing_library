@@ -158,6 +158,7 @@ class ThingDownloaderMulti:
     def download_all(self, download_location):
 
             for thing in self.search_results['hits']:
+                print('downloading :', thing['name'])
                 download_files_from_thing(self, thing, download_location)
 
 
@@ -165,16 +166,16 @@ class ThingDownloaderMulti:
 
 if __name__ == '__main__':
 
-    terrier = ThingDownloaderSingle()
+    # terrier = ThingDownloaderSingle()
 
-    terrier.get_thing_by_id(api_base,2334419)
+    # terrier.get_thing_by_id(api_base,2334419)
     
-    thing_files = terrier.get_files()
+    # thing_files = terrier.get_files()
 
-    file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
+    # file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
     dogs = ThingDownloaderMulti()
-    dogs.search_for_thing('tag', 'dog',per_page=10, sort = 'popular')
-    dogs.verify_from_image()
-    dogs.download_verified(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
+    dogs.search_for_thing('tag', 'dragon',per_page=3, sort = 'popular')
+    #dogs.verify_from_image()
+    dogs.download_all(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
