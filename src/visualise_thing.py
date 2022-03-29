@@ -49,3 +49,4 @@ if __name__=='__main__':
     mesh = dog.mesh
     dog.rotate_mesh(0, 0, 90)
     dog.visualise_stl()
+    dog.save()
