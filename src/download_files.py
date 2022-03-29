@@ -37,6 +37,24 @@ def cleanse_path(path_string):
 
     return cleansed_name
 
+def download_files_from_thing(self, thing, download_location):
+    folder_name = cleanse_path(thing['name'])
+    folder_path = os.path.join(download_location, folder_name)
+
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+
+    file_path = get_api_path(thing['url'] + '/files', self.access_token)
+    file_dict = r.get(file_path).json()
+
+    for file in file_dict: 
+        #print(file)
+        file_url = get_api_path(file['download_url'], self.access_token)
+        file_dl = r.get(file_url)
+        file_name = os.path.join(folder_path, file['name'])
+        with open(file_name, 'wb') as f:
+            f.write(file_dl.content)
+
 class ThingDownloaderSingle:
     """
     Download things for a single thing by ID
@@ -133,24 +151,16 @@ class ThingDownloaderMulti:
         for thing in self.search_results['hits']:
             if thing['is_correct'] == True:
 
-                    folder_name = cleanse_path(thing['name'])
-                    folder_path = os.path.join(download_location, folder_name)
-
-                    if not os.path.exists(folder_path):
-                        os.makedirs(folder_path)
-
-                    file_path = get_api_path(thing['url'] + '/files', self.access_token)
-                    file_dict = r.get(file_path).json()
-
-                    for file in file_dict: 
-                        #print(file)
-                        file_url = get_api_path(file['download_url'], self.access_token)
-                        file_dl = r.get(file_url)
-                        file_name = os.path.join(folder_path, file['name'])
-                        with open(file_name, 'wb') as f:
-                            f.write(file_dl.content)
+                download_files_from_thing(self, thing, download_location)
 
         print('files downloaded')
+
+    def download_all(self, download_location):
+
+            for thing in self.search_results['hits']:
+                download_files_from_thing(self, thing, download_location)
+
+
 
 
 if __name__ == '__main__':
