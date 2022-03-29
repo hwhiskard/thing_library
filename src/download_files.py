@@ -94,9 +94,14 @@ class ThingDownloaderMulti:
 
         return self.user_details
 
-    def search_for_thing(self,search_term,per_page, sort):
+    def search_for_thing(self, search_type, search_term,per_page, sort):
+        
+        assert search_type == 'tag' or search_type == 'term', ' Search type must be either tag or term'
 
         search_path = f'search/{search_term}'
+        if search_term == 'tag':
+            search_path += 'tag'
+        
         num_results_path = f'per_page={per_page}'
         sort_path = f'sort={sort}'
         full_url = get_api_path(api_base, self.access_token, search_path, num_results_path, sort_path)
@@ -159,7 +164,7 @@ if __name__ == '__main__':
     file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
     dogs = ThingDownloaderMulti()
-    dogs.search_for_thing('dog',per_page=10, sort = 'popular')
+    dogs.search_for_thing('tag', 'dog',per_page=10, sort = 'popular')
     dogs.verify_from_image()
     dogs.download_verified(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
