@@ -10,7 +10,18 @@ load_dotenv(find_dotenv())
 api_base = "https://api.thingiverse.com/"
 
 def get_api_path(base, access_token, search_term = None, *args):
-
+    """
+    Function to get api path with additional search terms and all required parameters added on
+    Args:
+    base: base thingiverse api
+    access_token: token from thingiverse
+    search_term: additional search paths
+    args: additional parameters
+    
+    Returns:
+    api_query: single query string with all terms and access_token 
+    """
+    
     if search_term:
         api_query = base + search_term
     else:
@@ -29,6 +40,15 @@ def get_api_path(base, access_token, search_term = None, *args):
     return api_query
 
 def cleanse_path(path_string):
+    """
+    Function to remove special characters from string so it can be saved
+    Args:
+    path_string: file name to be used as file path
+    
+    Returns:
+    cleansed_name: file_path with any special characters removed
+    """
+    
     cleansed_name = ""
     
     for char in path_string:
@@ -38,6 +58,16 @@ def cleanse_path(path_string):
     return cleansed_name
 
 def download_files_from_thing(self, thing, download_location):
+    """
+    Function to all files within a thing
+    Args:
+    thing: thing json
+    download_location: folder path for download
+    
+    Returns:
+    None: All files downloaded
+    """    
+    
     folder_name = cleanse_path(thing['name'])
     folder_path = os.path.join(download_location, folder_name)
 
@@ -48,7 +78,7 @@ def download_files_from_thing(self, thing, download_location):
     file_dict = r.get(file_path).json()
 
     for file in file_dict: 
-        #print(file)
+        
         file_url = get_api_path(file['download_url'], self.access_token)
         file_dl = r.get(file_url)
         file_name = os.path.join(folder_path, file['name'])
@@ -80,22 +110,11 @@ class ThingDownloaderSingle:
     def download_files(self, download_location, limit = None):
 
         if limit is None:
-            for file in self.files:
-                file_path = get_api_path(file['download_url'], self.access_token)
-                file_dl = r.get(file_path)
-                
-                folder_name = cleanse_path(self.thing_json['name'])
-                folder_path = os.path.join(download_location, folder_name)
-                
-                if not os.path.exists(folder_path):
-                        os.makedirs(folder_path)
-
-                file_name = os.path.join(folder_path, file['name'])
-                with open(file_name, 'wb') as f:
-                     f.write(file_dl.content)
-                
-            print('Files downloaded')
-
+            
+            download_files_from_thing(self, thing, download_location)
+        else:
+            # TO DO
+            pass
 
 class ThingDownloaderMulti:
     """
@@ -128,7 +147,10 @@ class ThingDownloaderMulti:
         return self.search_results
 
     def verify_from_image(self):
-
+        """
+        Lets user go through each thing and look at name and image.
+        User input lets user decide to keep or discard things for download later
+        """
         for thing in self.search_results['hits']:
             print(thing["name"])
             print(thing["preview_image"])
@@ -147,7 +169,9 @@ class ThingDownloaderMulti:
             thing['is_correct'] = get_input()
 
     def download_verified(self, download_location):
-
+        """
+        Download only things that have previously been verified
+        """
         for thing in self.search_results['hits']:
             if thing['is_correct'] == True:
 
@@ -156,7 +180,9 @@ class ThingDownloaderMulti:
         print('files downloaded')
 
     def download_all(self, download_location):
-
+        """
+        Download any file irrespective of verification
+        """
             for thing in self.search_results['hits']:
                 print('downloading :', thing['name'])
                 download_files_from_thing(self, thing, download_location)
