@@ -37,14 +37,15 @@ def cleanse_path(path_string):
 
     return cleansed_name
 
-def download_files_from_thing(self, thing, download_location):
-    folder_name = cleanse_path(thing['name'])
+
+def download_files_from_thing(self, download_location):
+    folder_name = cleanse_path(self.thing_json['name'])
     folder_path = os.path.join(download_location, folder_name)
 
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    file_path = get_api_path(thing['url'] + '/files', self.access_token)
+    file_path = get_api_path(self.thing_json['url'] + '/files', self.access_token)
     file_dict = r.get(file_path).json()
 
     for file in file_dict: 
@@ -55,7 +56,33 @@ def download_files_from_thing(self, thing, download_location):
         with open(file_name, 'wb') as f:
             f.write(file_dl.content)
 
-class ThingDownloaderSingle:
+
+class SingleThing:
+    def __init__(self, thing_json, access_token):
+        self.thing_json = thing_json
+        self.access_token = access_token
+    
+    def download_files_from_thing(self, download_location):
+        folder_name = cleanse_path(self.thing_json['name'])
+        folder_path = os.path.join(download_location, folder_name)
+
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+
+        file_path = get_api_path(self.thing_json['url'] + '/files', self.access_token)
+        file_dict = r.get(file_path).json()
+
+        for file in file_dict: 
+            #print(file)
+            file_url = get_api_path(file['download_url'], self.access_token)
+            file_dl = r.get(file_url)
+            file_name = os.path.join(folder_path, file['name'])
+            with open(file_name, 'wb') as f:
+                f.write(file_dl.content)
+        print('files downloaded')
+
+
+class ThingDownloaderSingle():
     """
     Download things for a single thing by ID
     """
@@ -68,7 +95,7 @@ class ThingDownloaderSingle:
         search_term = f'things/{thing_id}'
         full_url = get_api_path(api_base, self.access_token, search_term)
 
-        self.thing_json = r.get(full_url).json()
+        self.single_thing = SingleThing(r.get(full_url).json(), self.access_token)
         
 
     def get_files(self):
@@ -76,25 +103,6 @@ class ThingDownloaderSingle:
         file_path = get_api_path(self.thing_json['files_url'], self.access_token)
         self.files = r.get(file_path).json()
         return self.files
-
-    def download_files(self, download_location, limit = None):
-
-        if limit is None:
-            for file in self.files:
-                file_path = get_api_path(file['download_url'], self.access_token)
-                file_dl = r.get(file_path)
-                
-                folder_name = cleanse_path(self.thing_json['name'])
-                folder_path = os.path.join(download_location, folder_name)
-                
-                if not os.path.exists(folder_path):
-                        os.makedirs(folder_path)
-
-                file_name = os.path.join(folder_path, file['name'])
-                with open(file_name, 'wb') as f:
-                     f.write(file_dl.content)
-                
-            print('Files downloaded')
 
 
 class ThingDownloaderMulti:
@@ -166,16 +174,16 @@ class ThingDownloaderMulti:
 
 if __name__ == '__main__':
 
-    # terrier = ThingDownloaderSingle()
+    terrier = ThingDownloaderSingle()
 
-    # terrier.get_thing_by_id(api_base,2334419)
+    terrier.get_thing_by_id(api_base,2334419)
     
-    # thing_files = terrier.get_files()
+    terrier.single_thing.download_files_from_thing(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
     # file = terrier.download_files(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
-    dogs = ThingDownloaderMulti()
-    dogs.search_for_thing('tag', 'dragon',per_page=3, sort = 'popular')
-    #dogs.verify_from_image()
-    dogs.download_all(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
+    # dogs = ThingDownloaderMulti()
+    # dogs.search_for_thing('tag', 'dragon',per_page=3, sort = 'popular')
+    # #dogs.verify_from_image()
+    # dogs.download_all(r'C:\Users\WHI93526\OneDrive - Mott MacDonald\Documents\thing_files')
 
